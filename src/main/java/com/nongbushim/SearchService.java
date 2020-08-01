@@ -18,4 +18,16 @@ public class SearchService {
 
         return reader.lines().filter(s -> s.contains(term)).collect(Collectors.toList());
     }
+
+    public String searchKindCode(String item) throws IOException {
+        InputStream resource = new ClassPathResource("listWithKindcode.txt").getInputStream();
+        BufferedReader reader = new BufferedReader(new InputStreamReader(resource));
+
+        String line;
+        while((line = reader.readLine()) != null){
+            if (line.contains(item)) break;
+        }
+        String kindCode = line.substring(0,2);
+        return kindCode;
+    }
 }

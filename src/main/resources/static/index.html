@@ -12,7 +12,7 @@
       $(function () {
         $("#searchInput").autocomplete({
           source: "nameAutoComplete",
-          minLength:1
+          minLength: 1,
         });
       });
     </script>
@@ -21,6 +21,9 @@
     <title>Title</title>
   </head>
   <body>
-    <input id="searchInput" type="text" />
+    <form action="/search" method="post">
+      <input id="searchInput" name="searchInput" type="text" />
+      <input type="submit" value="검색"/>
+    </form>
   </body>
 </html>

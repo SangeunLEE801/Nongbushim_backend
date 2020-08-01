@@ -1,17 +1,16 @@
 package com.nongbushim;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import com.nongbushim.Dto.ItemInfoDto;
+import com.nongbushim.Dto.KamisRequestDto;
+import com.nongbushim.Enum.GradeRank;
+import com.nongbushim.Enum.ItemCode;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.*;
 
@@ -24,17 +23,29 @@ public class SearchController {
         this.service = service;
     }
 
-    @GetMapping("/search")
-    public String callApi() throws JsonProcessingException {
+    @PostMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
+    public String search(HttpServletRequest request) throws IOException {
+        String input = request.getParameter("searchInput");
+
+        KamisRequestDto requestDto = convert(input);
+
         RestTemplate restTemplate = new RestTemplate();
         String jsonInString = "";
 
         Map<String, Object> result = new HashMap<>();
 
+        String parameters = "&p_yyyy=" + requestDto.getP_yyyy() + "&"
+                + "p_period=" + requestDto.getP_period() + "&"
+                + "p_itemcategorycode=" + requestDto.getP_itemcategorycode() + "&"
+                + "p_itemcode=" + requestDto.getP_itemcode() + "&"
+                + "p_kindcode=" + requestDto.getP_kindcode() + "&"
+                + "p_graderank=" + requestDto.getP_graderank() + "&"
+                + "p_countycode=" + requestDto.getP_countycode() + "&"
+                + "p_convert_kg_yn=" + requestDto.getP_convert_kg_yn() + "&";
         String url
-                = "http://www.kamis.or.kr/service/price/xml.do?action=yearlySalesList";
+                = "http://www.kamis.or.kr/service/price/xml.do?action=monthlySalesList";
         UriComponents uri = UriComponentsBuilder.fromHttpUrl(url
-                + "&p_yyyy=2015&p_itemcategorycode=100&p_itemcode=111&p_kindcode=01&p_graderank=1&p_countycode=1101&p_convert_kg_yn=N&p_cert_key=111&p_cert_id=222&p_returntype=json"
+                + parameters + "p_cert_key=111&p_cert_id=222&p_returntype=json"
         ).build();
 
         HttpHeaders header = new HttpHeaders();
@@ -46,11 +57,38 @@ public class SearchController {
         result.put("header", resultMap.getHeaders()); //헤더 정보 확인
         result.put("body", resultMap.getBody()); //실제 데이터 정보 확인
 
-        //데이터를 제대로 전달 받았는지 확인 string형태로 파싱해줌
-//        ObjectMapper mapper = new ObjectMapper();
         jsonInString = String.valueOf(result.get("body"));
 
         return jsonInString;
+    }
+
+
+    private KamisRequestDto convert(String input) throws IOException {
+        ItemInfoDto itemInfoDto = searchInfo(input);
+        return KamisRequestDto.builder()
+                .p_yyyy("2020")
+                .p_period("3")
+                .p_itemcategorycode(itemInfoDto.getItemCategoryCode())
+                .p_graderank(itemInfoDto.getGradeRank())
+                .p_itemcode(itemInfoDto.getItemCode())
+                .p_kindcode(itemInfoDto.getKindCode())
+                .p_convert_kg_yn("N")
+                .p_countycode("1101")
+                .build();
+    }
+
+    private ItemInfoDto searchInfo(String input) throws IOException {
+        String[] terms = input.split(" ");
+        String itemName = terms[0];
+        String kind = terms[1];
+        String grade = terms[2];
+        ItemInfoDto itemInfoDto = new ItemInfoDto();
+        ItemCode itemCode = ItemCode.searchCode(itemName);
+        itemInfoDto.setItemCode(itemCode.getCode());
+        itemInfoDto.setItemCategoryCode(itemCode.getItemCategoryCode().getCode());
+        itemInfoDto.setGradeRank(GradeRank.searchGradeRank(grade).getCode());
+        itemInfoDto.setKindCode(service.searchKindCode(itemName + " " + kind));
+        return itemInfoDto;
     }
 
     @RequestMapping("/nameAutoComplete")
