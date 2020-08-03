@@ -13,6 +13,4 @@ public class KamisResponseDto {
     private List<List<String>> condition;
 
     private String error_code;
-
-    private Price price;
 }

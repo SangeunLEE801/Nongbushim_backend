@@ -1,7 +1,12 @@
 package com.nongbushim;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.nongbushim.Dto.FormDto;
+import com.nongbushim.Dto.GraphDto;
 import com.nongbushim.Dto.ItemInfoDto;
 import com.nongbushim.Dto.KamisRequestDto;
+import com.nongbushim.Dto.KamisResponse.*;
 import com.nongbushim.Enum.GradeRank;
 import com.nongbushim.Enum.ItemCode;
 import org.springframework.http.*;
@@ -36,11 +41,7 @@ public class SearchController {
 
         KamisRequestDto requestDto = convert(input);
 
-        RestTemplate restTemplate = new RestTemplate();
-        String jsonInString = "";
-
-        Map<String, Object> result = new HashMap<>();
-
+        String url = "http://www.kamis.or.kr/service/price/xml.do?action=monthlySalesList";
         String parameters = "&p_yyyy=" + requestDto.getP_yyyy() + "&"
                 + "p_period=" + requestDto.getP_period() + "&"
                 + "p_itemcategorycode=" + requestDto.getP_itemcategorycode() + "&"
@@ -49,26 +50,87 @@ public class SearchController {
                 + "p_graderank=" + requestDto.getP_graderank() + "&"
                 + "p_countycode=" + requestDto.getP_countycode() + "&"
                 + "p_convert_kg_yn=" + requestDto.getP_convert_kg_yn() + "&";
-        String url
-                = "http://www.kamis.or.kr/service/price/xml.do?action=monthlySalesList";
-        UriComponents uri = UriComponentsBuilder.fromHttpUrl(url
-                + parameters + "p_cert_key=111&p_cert_id=222&p_returntype=json"
-        ).build();
+        UriComponents uri = UriComponentsBuilder.fromHttpUrl(url + parameters + "p_cert_key=111&p_cert_id=222&p_returntype=json").build();
 
         HttpHeaders header = new HttpHeaders();
         header.add("key", "c870db87-9503-48c8-aca3-dee7f28a42ba");
         HttpEntity<?> entity = new HttpEntity<>(header);
 
+        RestTemplate restTemplate = new RestTemplate();
         ResponseEntity<String> resultMap = restTemplate.exchange(uri.toString(), HttpMethod.GET, entity, String.class);
-        result.put("statusCode", resultMap.getStatusCodeValue()); //http status code를 확인
-        result.put("header", resultMap.getHeaders()); //헤더 정보 확인
-        result.put("body", resultMap.getBody()); //실제 데이터 정보 확인
 
-        jsonInString = String.valueOf(result.get("body"));
-
-        return jsonInString;
+        Gson gson = new Gson();
+        KamisResponseSingleDto singleDto;
+        KamisResponsePluralDto pluralDto;
+        // 도매값 대상
+        Price price;
+        try{
+            singleDto = gson.fromJson(resultMap.getBody(), KamisResponseSingleDto.class);
+            price = singleDto.getPrice();
+        } catch(JsonSyntaxException e){
+            pluralDto = gson.fromJson(resultMap.getBody(), KamisResponsePluralDto.class);
+            price = pluralDto.getPrice().get(0);
+        }
+        GraphDto graphDto = createGraphInfo(price);
+        model.addAttribute("labels", graphDto.getLabel());
+        model.addAttribute("data", graphDto.getMonthlySales());
+        return "index";
     }
 
+    @RequestMapping("/nameAutoComplete")
+    @ResponseBody
+    public List<String> nameAutoComplete(@RequestParam(value = "term", required = false, defaultValue = "") String term) {
+        List<String> suggestions = new LinkedList<>();
+        try {
+            return service.searchAutoCompleteTarget(term);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return suggestions;
+    }
+
+    private GraphDto createGraphInfo(Price price) {
+        GraphDto graphDto = new GraphDto();
+        int lastItemIdx = price.getItem().size() - 1;
+
+        String[] label = new String[12];
+        String[] monthlySales = new String[12];
+        int idx = 0;
+        while (idx <= 11) {
+            Item current = price.getItem().get(lastItemIdx);
+
+            List<String> currentYearMonthlySalesList = currentYearMonthlySalesList(current);
+            for (int i = 11; i >= 0 && idx <= 11; i--) {
+                String sales = currentYearMonthlySalesList.get(i);
+                if ("-".equals(sales)) continue;
+                label[idx] = current.getYyyy() + "년-" + (i + 1) + "월";
+                monthlySales[idx] = sales;
+                idx++;
+            }
+            lastItemIdx--;
+
+        }
+        graphDto.setLabel(label);
+        graphDto.setMonthlySales(monthlySales);
+        return graphDto;
+    }
+
+    private List<String> currentYearMonthlySalesList(Item current) {
+        return Arrays.asList(
+                current.getM1(),
+                current.getM2(),
+                current.getM3(),
+                current.getM4(),
+                current.getM5(),
+                current.getM6(),
+                current.getM7(),
+                current.getM8(),
+                current.getM9(),
+                current.getM10(),
+                current.getM11(),
+                current.getM12()
+        );
+    }
 
     private KamisRequestDto convert(String input) throws IOException {
         ItemInfoDto itemInfoDto = searchInfo(input);
@@ -96,17 +158,5 @@ public class SearchController {
         itemInfoDto.setGradeRank(GradeRank.searchGradeRank(grade).getCode());
         itemInfoDto.setKindCode(service.searchKindCode(itemName + " " + kind));
         return itemInfoDto;
-    }
-
-    @RequestMapping("/nameAutoComplete")
-    @ResponseBody
-    public List<String> nameAutoComplete(@RequestParam(value = "term", required = false, defaultValue = "") String term) {
-        List<String> suggestions = new LinkedList<>();
-        try {
-            return service.searchAutoCompleteTarget(term);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return suggestions;
     }
 }
