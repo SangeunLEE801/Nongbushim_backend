@@ -5,16 +5,17 @@ import com.nongbushim.Dto.KamisRequestDto;
 import com.nongbushim.Enum.GradeRank;
 import com.nongbushim.Enum.ItemCode;
 import org.springframework.http.*;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.util.*;
 
-@RestController
+@Controller
 public class SearchController {
 
     private final SearchService service;
@@ -23,9 +24,15 @@ public class SearchController {
         this.service = service;
     }
 
+    @RequestMapping("/")
+    public String index(Model model) {
+        model.addAttribute("form", new FormDto());
+        return "index";
+    }
+
     @PostMapping(value = "/search", produces = MediaType.APPLICATION_JSON_VALUE)
-    public String search(HttpServletRequest request) throws IOException {
-        String input = request.getParameter("searchInput");
+    public String search(@ModelAttribute("form") FormDto form, Model model) throws IOException {
+        String input = form.getText();
 
         KamisRequestDto requestDto = convert(input);
 
