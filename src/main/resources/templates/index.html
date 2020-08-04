@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="kr">
   <head>
     <!-- CSS , JS -->
     <link
@@ -8,6 +8,8 @@
     />
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+
     <script type="text/javascript">
       $(function () {
         $("#searchInput").autocomplete({
@@ -30,5 +32,30 @@
       />
       <input type="submit" value="검색" />
     </form>
+    <div th:if="${labels} != null and ${data} !=null">
+    <canvas id="lineChart" width="400" height="400"></canvas>
+
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+      /*<![CDATA[*/
+      var ctx = $('#lineChart');
+      var myLineChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: /* [[${labels}]]*/,
+          datasets: [{
+            label: '월별 가격',
+            fill: false,
+            data: /* [[ ${data} ]]*/
+          }]
+        },
+        options: {
+          responsive: true,
+        }
+      });
+      /*]]>*/
+
+    </script>
+
   </body>
 </html>

@@ -44,7 +44,7 @@ public class SearchController {
         return "index";
     }
 
-    @RequestMapping("/nameAutoComplete")
+    @RequestMapping("/autoComplete")
     @ResponseBody
     public List<String> autoComplete(@RequestParam(value = "term", required = false, defaultValue = "") String term) {
         List<String> suggestions = new LinkedList<>();
