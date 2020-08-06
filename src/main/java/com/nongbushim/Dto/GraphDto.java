@@ -16,5 +16,5 @@ public class GraphDto {
     private String region;
 
     private String[] label;
-    private String[] monthlySales;
+    private int[] monthlySales;
 }

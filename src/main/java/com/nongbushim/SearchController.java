@@ -105,7 +105,7 @@ public class SearchController {
         int lastItemIdx = price.getItem().size() - 1;
 
         String[] label = new String[12];
-        String[] monthlySales = new String[12];
+        int[] monthlySales = new int[12];
         int idx = 0;
         while (idx <= 11) {
             Item current = price.getItem().get(lastItemIdx);
@@ -115,7 +115,7 @@ public class SearchController {
                 String sales = currentYearMonthlySalesList.get(i);
                 if ("-".equals(sales)) continue;
                 label[idx] = current.getYyyy() + "년-" + (i + 1) + "월";
-                monthlySales[idx] = sales;
+                monthlySales[idx] = Integer.parseInt(sales.replace(",",""));
                 idx++;
             }
             lastItemIdx--;
