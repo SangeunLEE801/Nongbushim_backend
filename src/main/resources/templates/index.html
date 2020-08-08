@@ -1,84 +1,96 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="kr">
-<head>
+  <head>
     <!-- CSS , JS -->
     <link
-            rel="stylesheet"
-            href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
+      rel="stylesheet"
+      href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css"
     />
     <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
 
     <script type="text/javascript">
-        $(function () {
-            $("#searchInput").autocomplete({
-                source: "autoComplete",
-                minLength: 1,
-            });
+      $(function () {
+        $("#searchInput").autocomplete({
+          source: "autoComplete",
+          minLength: 1,
+          response: function (event, ui) {
+            var resultCount = ui.content.length;
+            if (resultCount === 0) {
+              $("#submitButton").prop("disabled", true);
+            } else {
+              $("#submitButton").prop("disabled", false);
+            }
+          },
         });
+      });
     </script>
 
-    <meta charset="UTF-8"/>
+    <meta charset="UTF-8" />
     <title>Title</title>
-</head>
-<body>
-<form action="#" th:action="@{/search}" th:object="${form}" method="post">
-    <input
-            id="searchInput"
-            name="searchInput"
-            type="text"
-            th:field="*{text}"
-    />
-    <input type="submit" value="검색"/>
-</form>
-<div class="chart-container" style="position: relative; height:40vh; width:80vw" th:if="${chartInfoList} != null">
-    <canvas id="lineChart"></canvas>
-</div>
-<script type="text/javascript" th:inline="javascript">
-    /*<![CDATA[*/
-    var ctx = $('#lineChart');
-    var myLineChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: [[${labels}]],
-            datasets: [{
+  </head>
+  <body>
+    <form action="#" th:action="@{/search}" th:object="${form}" method="post">
+      <input
+        id="searchInput"
+        name="searchInput"
+        type="text"
+        th:field="*{text}"
+      />
+      <input id="submitButton" type="submit" value="검색" />
+    </form>
+    <div
+      class="chart-container"
+      style="position: relative; height: 40vh; width: 80vw;"
+      th:if="${chartInfoList} != null"
+    >
+      <canvas id="lineChart"></canvas>
+    </div>
+    <script type="text/javascript" th:inline="javascript">
+      /*<![CDATA[*/
+      var ctx = $('#lineChart');
+      var myLineChart = new Chart(ctx, {
+      		type: 'line',
+      		data: {
+      				labels: [[${labels}]],
+      				datasets: [{
 
-                label: [[${seoulLabel}]],
-                fill: false,
-              backgroundColor: 'rgba(193, 66, 66, 1)',
-              borderColor: 'rgba(193, 66, 66, 1)',
-                data: [[${seoulData}]]
-            }, {
-              label: [[${busanLabel}]],
-              fill: false,
-              backgroundColor: 'rgba(63, 191, 191, 1)',
-              borderColor: 'rgba(63, 191, 191, 1)',
-              data: [[${busanData}]]
-            },{
-              label: [[${daeguLabel}]],
-              fill: false,
-              backgroundColor: 'rgba(63, 84, 191, 1)',
-              borderColor: 'rgba(63, 84, 191, 1)',
-              data: [[${daeguData}]]
-            },{
-              label: [[${gwangjuLabel}]],
-              fill: false,
-              backgroundColor: 'rgba(99, 63, 191, 1)',
-              borderColor: 'rgba(99, 63, 191, 1)',
-              data: [[${gwangjuData}]]
-            },{
-              label: [[${daejeonLabel}]],
-              fill: false,
-              backgroundColor: 'rgba(191, 159, 63)',
-              borderColor: 'rgba(191, 159, 63)',
-              data: [[${daejeonData}]]
-            }
+      						label: [[${seoulLabel}]],
+      						fill: false,
+      						backgroundColor: 'rgba(193, 66, 66, 1)',
+      						borderColor: 'rgba(193, 66, 66, 1)',
+      						data: [[${seoulData}]]
+      				}, {
+      						label: [[${busanLabel}]],
+      						fill: false,
+      						backgroundColor: 'rgba(63, 191, 191, 1)',
+      						borderColor: 'rgba(63, 191, 191, 1)',
+      						data: [[${busanData}]]
+      				}, {
+      						label: [[${daeguLabel}]],
+      						fill: false,
+      						backgroundColor: 'rgba(63, 84, 191, 1)',
+      						borderColor: 'rgba(63, 84, 191, 1)',
+      						data: [[${daeguData}]]
+      				}, {
+      						label: [[${gwangjuLabel}]],
+      						fill: false,
+      						backgroundColor: 'rgba(99, 63, 191, 1)',
+      						borderColor: 'rgba(99, 63, 191, 1)',
+      						data: [[${gwangjuData}]]
+      				}, {
+      						label: [[${daejeonLabel}]],
+      						fill: false,
+      						backgroundColor: 'rgba(191, 159, 63)',
+      						borderColor: 'rgba(191, 159, 63)',
+      						data: [[${daejeonData}]]
+      				}
 
-            ]
-        }
-    });
-    /*]]>*/
-</script>
-</body>
+      				]
+      		}
+      });
+      /*]]>*/
+    </script>
+  </body>
 </html>
