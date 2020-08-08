@@ -63,25 +63,31 @@ public class SearchController {
         UriComponents uri;
         RestTemplate restTemplate = new RestTemplate();
         List<ResponseEntity<String>> resultMap = new ArrayList<>();
-        for (String parameter: parameters) {
-             uri = UriComponentsBuilder.fromHttpUrl(URL + parameter + FIXED_PARAMETERS).build();
+        for (String parameter : parameters) {
+            uri = UriComponentsBuilder.fromHttpUrl(URL + parameter + FIXED_PARAMETERS).build();
             resultMap.add(restTemplate.exchange(uri.toString(), HttpMethod.GET, HTTP_ENTITY, String.class));
         }
 
         List<WholesaleInfoDto> wholesaleInfoList = getWholesalePrice(resultMap);
-        List<ChartInfoDto> chartInfoList = createGraphInfo(wholesaleInfoList);
-        model.addAttribute("chartInfoList", chartInfoList);
-        model.addAttribute("labels", chartInfoList.get(0).getLabel());
-        model.addAttribute("seoulData",chartInfoList.get(0).getMonthlySales());
-        model.addAttribute("seoulLabel",chartInfoList.get(0).getRegion());
-        model.addAttribute("busanData",chartInfoList.get(1).getMonthlySales());
-        model.addAttribute("busanLabel",chartInfoList.get(1).getRegion());
-        model.addAttribute("daeguData",chartInfoList.get(2).getMonthlySales());
-        model.addAttribute("daeguLabel",chartInfoList.get(2).getRegion());
-        model.addAttribute("gwangjuData",chartInfoList.get(3).getMonthlySales());
-        model.addAttribute("gwangjuLabel",chartInfoList.get(3).getRegion());
-        model.addAttribute("daejeonData",chartInfoList.get(4).getMonthlySales());
-        model.addAttribute("daejeonLabel",chartInfoList.get(4).getRegion());
+        List<ChartInfoDto> chartInfoList;
+        try {
+            chartInfoList = createGraphInfo(wholesaleInfoList);
+            model.addAttribute("chartInfoList", chartInfoList);
+            model.addAttribute("labels", chartInfoList.get(0).getLabel());
+            model.addAttribute("seoulData", chartInfoList.get(0).getMonthlySales());
+            model.addAttribute("seoulLabel", chartInfoList.get(0).getRegion());
+            model.addAttribute("busanData", chartInfoList.get(1).getMonthlySales());
+            model.addAttribute("busanLabel", chartInfoList.get(1).getRegion());
+            model.addAttribute("daeguData", chartInfoList.get(2).getMonthlySales());
+            model.addAttribute("daeguLabel", chartInfoList.get(2).getRegion());
+            model.addAttribute("gwangjuData", chartInfoList.get(3).getMonthlySales());
+            model.addAttribute("gwangjuLabel", chartInfoList.get(3).getRegion());
+            model.addAttribute("daejeonData", chartInfoList.get(4).getMonthlySales());
+            model.addAttribute("daejeonLabel", chartInfoList.get(4).getRegion());
+        } catch (IndexOutOfBoundsException e) {
+
+        }
+
         return "index";
     }
 
@@ -91,15 +97,15 @@ public class SearchController {
         KamisResponsePluralDto pluralDto;
         // 도매값 대상
         List<WholesaleInfoDto> wholesaleInfoList = new ArrayList<>();
-        for (ResponseEntity<String> resultMap: resultMapList){
+        for (ResponseEntity<String> resultMap : resultMapList) {
             String countyCode;
             try {
                 singleDto = gson.fromJson(resultMap.getBody(), KamisResponseSingleDto.class);
-                countyCode= singleDto.getCondition().get(0).get(9);
+                countyCode = singleDto.getCondition().get(0).get(9);
                 wholesaleInfoList.add(new WholesaleInfoDto(singleDto.getPrice(), CountyCode.searchCountyCode(countyCode)));
             } catch (JsonSyntaxException e) {
                 pluralDto = gson.fromJson(resultMap.getBody(), KamisResponsePluralDto.class);
-                countyCode= pluralDto.getCondition().get(0).get(9);
+                countyCode = pluralDto.getCondition().get(0).get(9);
                 wholesaleInfoList.add(new WholesaleInfoDto(pluralDto.getPrice().get(0), CountyCode.searchCountyCode(countyCode)));
             }
         }
@@ -130,7 +136,7 @@ public class SearchController {
         List<ChartInfoDto> chartInfoDtoList = new ArrayList<>();
         int lastItemIdx;
         String[] label = new String[12];
-        for (WholesaleInfoDto wholesaleInfoDto: wholesaleInfoList){
+        for (WholesaleInfoDto wholesaleInfoDto : wholesaleInfoList) {
             int[] monthlySales = new int[12];
             ChartInfoDto chartInfoDto = new ChartInfoDto();
             lastItemIdx = wholesaleInfoDto.getPrice().getItem().size() - 1;
@@ -142,8 +148,8 @@ public class SearchController {
                 for (int monthIdx = 11; monthIdx >= 0 && idx <= 11; monthIdx--) {
                     String sales = currentYearMonthlySalesList.get(monthIdx);
                     if ("-".equals(sales)) continue;
-                    label[11-idx] = current.getYyyy() + "년-" + (monthIdx + 1) + "월";
-                    monthlySales[11-idx] = Integer.parseInt(sales.replace(",", ""));
+                    label[11 - idx] = current.getYyyy() + "년-" + (monthIdx + 1) + "월";
+                    monthlySales[11 - idx] = Integer.parseInt(sales.replace(",", ""));
                     idx++;
                 }
                 lastItemIdx--;
