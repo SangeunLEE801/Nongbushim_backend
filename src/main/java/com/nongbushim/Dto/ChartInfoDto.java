@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class GraphDto {
+public class ChartInfoDto {
     private String region;
 
     private String[] label;
